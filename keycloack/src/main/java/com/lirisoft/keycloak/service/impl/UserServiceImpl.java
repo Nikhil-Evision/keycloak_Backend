@@ -4,6 +4,10 @@ import com.lirisoft.keycloak.model.User;
 import com.lirisoft.keycloak.model.UserInfoResponse;
 import com.lirisoft.keycloak.model.UserResponse;
 import com.lirisoft.keycloak.service.UserService;
+import com.nimbusds.jose.shaded.json.JSONArray;
+import com.nimbusds.jose.shaded.json.JSONObject;
+import com.nimbusds.jose.shaded.json.parser.JSONParser;
+import com.nimbusds.jose.shaded.json.parser.ParseException;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
@@ -85,7 +89,35 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
     }
 
+    @Override
+    public ResponseEntity<List<String>> getUserRole(String accessToken) throws ParseException {
 
+        String token = accessToken;
+        String[] parts = token.split("\\.");
+        String payload = parts[1];
+        System.out.println("Payload: " + payload);
+
+        byte[] payloadBytes = java.util.Base64.getDecoder().decode(payload);
+        String payloadJsonString = new String(payloadBytes);
+        System.out.println("Payload JSON String: " + payloadJsonString);
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject payloadJson = (JSONObject) parser.parse(payloadJsonString);
+            JSONArray rolesArray = (JSONArray) ((JSONObject) payloadJson.get("realm_access")).get("roles");
+            List<String> rolesList = new ArrayList<>();
+            for (Object role : rolesArray) {
+                rolesList.add(role.toString());
+            }
+            String subject = (String) payloadJson.get("sub");
+            String roles = ((JSONObject) payloadJson.get("realm_access")).get("roles").toString();
+            System.out.println("Subject: " + subject);
+            System.out.println("Roles: " + roles);
+            return new ResponseEntity<>(rolesList, HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println("Error parsing JSON: " + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // Return an appropriate response for the error
+        }
+    }
     private static CredentialRepresentation createPasswordCredentials(String password) {
         CredentialRepresentation passwordCredentials = new CredentialRepresentation();
         passwordCredentials.setTemporary(false);
