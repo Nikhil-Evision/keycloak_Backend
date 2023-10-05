@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lirisoft.keycloak.model.*;
 import com.lirisoft.keycloak.response.ApiResponse;
 import com.lirisoft.keycloak.service.UserService;
+import com.nimbusds.jose.shaded.json.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import com.lirisoft.keycloak.service.LoginService;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.annotation.security.RolesAllowed;
+import java.util.List;
 
 @RestController
 @EnableGlobalMethodSecurity(jsr250Enabled = true)
@@ -79,6 +81,17 @@ public class UserController {
             token = parts[1];
         }
         return userService.userInfo(token);
+    }
+    @PostMapping("/getRole")
+    public ResponseEntity<List<String>> userRole(@RequestHeader("Authorization") String authorizationHeader) throws ParseException {
+        System.out.println("inside userRole method");
+        String[] parts = authorizationHeader.split(" ");
+        String token = null;
+        if (parts.length == 2 && parts[0].equalsIgnoreCase("Bearer")) {
+            token = parts[1];
+        }
+       return userService.getUserRole(token);
+
     }
 
     @PostMapping("/assign-role/{username}/{roleName}")
