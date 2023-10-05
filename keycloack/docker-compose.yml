@@ -1,0 +1,20 @@
+version: '3'
+services:
+  amulate-db:
+    container_name: adapter-db
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: Adapter@2023
+      MONGO_INITDB_ROOT_USERNAME: adapter
+      MONGO_INITDB_DATABASE: dbadapter
+    image: "mongo:latest"
+    logging:
+      driver: json-file
+      options:
+        max-file: "5"
+        max-size: 10m
+    ports:
+      - "27017:27017"
+    restart: unless-stopped
+    volumes:
+      - "./data:/data/db"
+      - "/etc/mongod.conf:/etc/mongod.conf"
